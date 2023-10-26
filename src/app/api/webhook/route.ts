@@ -1,9 +1,12 @@
 import { headers } from "next/headers";
 import type { WebhookEvent } from "@clerk/clerk-sdk-node";
 import { Webhook } from "svix";
+import { api } from "~/lib/api/client";
 
 export async function POST(req: Request) {
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
+
+  console.log("Webhook received");
   const WEBHOOK_SECRET = process.env.CLERK_ORG_CREATE_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -48,19 +51,32 @@ export async function POST(req: Request) {
     });
   }
 
-  // Get the ID and type
-  const { id } = evt.data;
-  const eventType = evt.type;
-
-  evt.data;
-
-  if (!id || !eventType) {
+  if (!evt.data.id || !evt.type) {
     return new Response("Error occured -- no id or type", {
       status: 400,
     });
   }
-  console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
-  console.log("Webhook body:", body);
 
-  return new Response("", { status: 201 });
+  if (evt.type === "organization.created") {
+    const { mutate: createOrganization } = api.auth.createOrganization.mutation(
+      {
+        onError: (err) => {
+          console.error(err);
+        },
+      }
+    );
+
+    createOrganization({
+      created_by: evt.data.created_by,
+      has_image: evt.data.has_image,
+      clerk_id: evt.data.id,
+      image_url: evt.data.image_url,
+      logo_url: evt.data.logo_url,
+      max_allowed_members: evt.data.max_allowed_memberships,
+      name: evt.data.name,
+      slug: evt.data.slug,
+    });
+  }
+
+  return new Response("Organization Created", { status: 201 });
 }

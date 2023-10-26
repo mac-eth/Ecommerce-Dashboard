@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CreateOrganization } from "@clerk/nextjs";
 import FeatureCard from "~/components/feature-card";
 import { Code, H2, H4, Large, Lead, P } from "~/components/typography";
 import { buttonVariants } from "~/components/ui/button";
