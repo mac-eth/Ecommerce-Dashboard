@@ -10,7 +10,7 @@ import { organizations } from "~/server/db/schema";
 
 export const createOrganizationSchema = z.object({
   created_by: z.string().min(1).max(191),
-  has_image: z.boolean(),
+  has_image: z.boolean().nullable(),
   clerk_id: z.string().min(1).max(191),
   image_url: z.string().min(1).max(191),
   logo_url: z.string().nullable(),

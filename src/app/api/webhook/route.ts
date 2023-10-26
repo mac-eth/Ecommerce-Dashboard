@@ -1,7 +1,8 @@
 import { headers } from "next/headers";
 import type { WebhookEvent } from "@clerk/clerk-sdk-node";
 import { Webhook } from "svix";
-import { api } from "~/lib/api/client";
+import { db } from "~/server/db";
+import { organizations } from "~/server/db/schema";
 
 export async function POST(req: Request) {
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
@@ -57,24 +58,26 @@ export async function POST(req: Request) {
     });
   }
 
-  if (evt.type === "organization.created") {
-    const { mutate: createOrganization } =
-      api.auth.createOrganization.useMutation({
-        onError: (err) => {
-          console.error(err);
-        },
-      });
-
-    createOrganization({
-      created_by: evt.data.created_by,
-      has_image: evt.data.has_image,
-      clerk_id: evt.data.id,
-      image_url: evt.data.image_url,
-      logo_url: evt.data.logo_url,
-      max_allowed_members: evt.data.max_allowed_memberships,
-      name: evt.data.name,
-      slug: evt.data.slug,
-    });
+  switch (evt.type) {
+    case "organization.created": {
+      const orgData = {
+        created_by: evt.data.created_by,
+        has_image: evt.data.has_image,
+        clerk_id: evt.data.id,
+        image_url: evt.data.image_url,
+        logo_url: evt.data.logo_url,
+        max_allowed_members: evt.data.max_allowed_memberships,
+        name: evt.data.name,
+        slug: evt.data.slug,
+      };
+      try {
+        await db.insert(organizations).values(orgData);
+        return new Response("Organization Created", { status: 201 });
+      } catch (dbError) {
+        console.error("Error inserting organization into database:", dbError);
+        return new Response("Database Error", { status: 500 });
+      }
+    }
   }
 
   return new Response("Organization Created", { status: 201 });
