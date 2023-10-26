@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CreateOrganization } from "@clerk/nextjs";
 import FeatureCard from "~/components/feature-card";
 import { Code, H2, H4, Large, Lead, P } from "~/components/typography";
 import { buttonVariants } from "~/components/ui/button";
@@ -174,5 +175,5 @@ export default async function Page() {
   );
 }
 
-export const runtime = "experimental-edge";
+export const runtime = "edge";
 export const revalidate = 0;

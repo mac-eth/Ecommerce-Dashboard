@@ -19,6 +19,7 @@
     "db:push": "pnpm drizzle-kit push:mysql"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.12.16",
     "@clerk/nextjs": "^4.16.2",
     "@hookform/resolvers": "^3.0.1",
     "@ianvs/prettier-plugin-sort-imports": "^3.7.2",
@@ -42,6 +43,7 @@
     "server-only": "^0.0.1",
     "slugify": "^1.6.6",
     "superjson": "^1.12.2",
+    "svix": "^1.13.0",
     "tailwind-merge": "^1.12.0",
     "tailwindcss-animate": "^1.0.5",
     "zod": "^3.21.4"
