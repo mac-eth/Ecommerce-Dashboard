@@ -58,13 +58,12 @@ export async function POST(req: Request) {
   }
 
   if (evt.type === "organization.created") {
-    const { mutate: createOrganization } = api.auth.createOrganization.mutation(
-      {
+    const { mutate: createOrganization } =
+      api.auth.createOrganization.useMutation({
         onError: (err) => {
           console.error(err);
         },
-      }
-    );
+      });
 
     createOrganization({
       created_by: evt.data.created_by,
