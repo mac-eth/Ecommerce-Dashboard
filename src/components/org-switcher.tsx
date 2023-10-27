@@ -1,11 +1,15 @@
 "use client";
 
 import * as React from "react";
+import { useOrganization, useOrganizationList } from "@clerk/nextjs";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CaretSortIcon,
   CheckIcon,
   PlusCircledIcon,
 } from "@radix-ui/react-icons";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import {
@@ -27,36 +31,23 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { Skeleton } from "~/components/ui/skeleton";
 import { cn } from "~/lib/utils";
 
-const groups = [
-  {
-    label: "Acme Inc.",
-    value: "acme-inc",
-  },
-  {
-    label: "Monsters Inc.",
-    value: "monsters",
-  },
-];
-
-interface Org {
-  label: string;
-  value: string;
-}
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
 
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<
   typeof PopoverTrigger
@@ -65,31 +56,66 @@ type PopoverTriggerProps = React.ComponentPropsWithoutRef<
 type OrgSwitcherProps = PopoverTriggerProps;
 
 export default function OrgSwitcher({ className }: OrgSwitcherProps) {
+  const { setActive, organizationList, createOrganization, isLoaded } =
+    useOrganizationList();
+  const { organization } = useOrganization();
   const [open, setOpen] = React.useState(false);
   const [showNewOrgDialog, setShowNewOrgDialog] = React.useState(false);
-  const [selectedOrg, setSelectedOrg] = React.useState<Org>(groups[0] as Org);
+  const [selectedOrgId, setSelectedOrgId] = React.useState<string>(
+    organizationList?.[0]?.organization.id ?? ""
+  );
+  const formSchema = z.object({
+    organizationName: z
+      .string()
+      .min(4, "Organization Name Must be atleast 4 Characters")
+      .max(30, "Organization Name cannot exceed 30 Characters"),
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      organizationName: "",
+    },
+  });
+
+  async function onSubmit({ organizationName }: z.infer<typeof formSchema>) {
+    if (createOrganization) {
+      await createOrganization({
+        name: organizationName,
+      });
+      setShowNewOrgDialog(false);
+    } else {
+      console.error("createOrganization is not defined");
+    }
+  }
 
   return (
     <Dialog open={showNewOrgDialog} onOpenChange={setShowNewOrgDialog}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-label="Select a Org"
-            className={cn("w-[200px] justify-between", className)}
-          >
-            <Avatar className="mr-2 h-5 w-5">
-              <AvatarImage
-                src={`https://avatar.vercel.sh/${selectedOrg.value}.png`}
-                alt={selectedOrg.label}
-              />
-              <AvatarFallback>SC</AvatarFallback>
-            </Avatar>
-            {selectedOrg.label}
-            <CaretSortIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+          {isLoaded ? (
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              aria-label="Select a Org"
+              className={cn("w-[200px] justify-between", className)}
+            >
+              <Avatar className="mr-2 h-5 w-5">
+                <AvatarImage
+                  src={organization?.imageUrl}
+                  alt={organization?.name}
+                />
+                <AvatarFallback>?</AvatarFallback>
+              </Avatar>
+              {organization?.name}
+              <CaretSortIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          ) : (
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-10 w-[200px]" />
+            </div>
+          )}
         </PopoverTrigger>
         <PopoverContent className="w-[200px] p-0">
           <Command>
@@ -97,28 +123,30 @@ export default function OrgSwitcher({ className }: OrgSwitcherProps) {
               <CommandInput placeholder="Search Org..." />
               <CommandEmpty>No Org found.</CommandEmpty>
 
-              {groups.map((Org) => (
+              {organizationList?.map((Org) => (
                 <CommandItem
-                  key={Org.value}
+                  key={Org.organization.name}
+                  value={Org.organization.id}
                   onSelect={() => {
-                    setSelectedOrg(Org);
+                    void setActive({ organization: Org.organization });
+                    setSelectedOrgId(Org.organization.id);
                     setOpen(false);
                   }}
                   className="text-sm"
                 >
                   <Avatar className="mr-2 h-5 w-5">
                     <AvatarImage
-                      src={`https://avatar.vercel.sh/${Org.value}.png`}
-                      alt={Org.label}
+                      src={Org.organization.imageUrl}
+                      alt={Org.organization.name}
                       className="grayscale"
                     />
                     <AvatarFallback>SC</AvatarFallback>
                   </Avatar>
-                  {Org.label}
+                  {Org.organization.name}
                   <CheckIcon
                     className={cn(
                       "ml-auto h-4 w-4",
-                      selectedOrg.value === Org.value
+                      selectedOrgId === Org.organization.id
                         ? "opacity-100"
                         : "opacity-0"
                     )}
@@ -152,42 +180,35 @@ export default function OrgSwitcher({ className }: OrgSwitcherProps) {
             Add a new Org to manage products and customers.
           </DialogDescription>
         </DialogHeader>
-        <div>
-          <div className="space-y-4 py-2 pb-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Org name</Label>
-              <Input id="name" placeholder="Acme Inc." />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="plan">Subscription plan</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a plan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="free">
-                    <span className="font-medium">Free</span> -{" "}
-                    <span className="text-muted-foreground">
-                      Trial for two weeks
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="pro">
-                    <span className="font-medium">Pro</span> -{" "}
-                    <span className="text-muted-foreground">
-                      $9/month per user
-                    </span>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setShowNewOrgDialog(false)}>
-            Cancel
-          </Button>
-          <Button type="submit">Continue</Button>
-        </DialogFooter>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FormField
+              control={form.control}
+              name="organizationName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Organization Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Acme Inc." {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Add a new Org to manage products and customers.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowNewOrgDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Continue</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
