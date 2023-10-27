@@ -1,6 +1,5 @@
-import { Inter } from "next/font/google";
-
 import "~/styles/globals.css";
+import { Inter } from "next/font/google";
 import { siteConfig } from "~/config/site";
 import { cn } from "~/lib/utils";
 
@@ -69,42 +68,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <head />
-      <ClientProviders>
-        <body
-          className={cn(
-            "antialiased bg-white text-black dark:bg-stone-900 dark:text-white",
-            fontSans.className
-          )}
-        >
+      <body className={cn("antialiased bg-background", fontSans.className)}>
+        <ClientProviders>
           <main className="min-h-screen">{children}</main>
-          <footer className="bg-gradient-to-l from-rose-100 to-teal-100 dark:from-rose-100/80 dark:to-teal-100/80 text-stone-900">
-            <div className="grid md:flex container md:items-center md:justify-between gap-2 md:gap-4 py-3 md:py-6 text-sm">
-              <p>
-                Built by{" "}
-                <a
-                  href={siteConfig.links.twitter}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold underline underline-offset-4"
-                >
-                  @o_ploskovytskyy
-                </a>
-              </p>
-              <p>
-                The source code is available on{" "}
-                <a
-                  href={siteConfig.links.github}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold underline underline-offset-4"
-                >
-                  GitHub
-                </a>
-              </p>
-            </div>
-          </footer>
-        </body>
-      </ClientProviders>
+        </ClientProviders>
+      </body>
     </html>
   );
 }

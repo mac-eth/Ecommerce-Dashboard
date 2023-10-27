@@ -1,23 +1,23 @@
-import Link from "next/link";
-import { UserButton } from "@clerk/nextjs/app-beta";
-import { Home } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
+import { MainNav } from "~/components/main-nav";
+import OrgSwitcher from "~/components/org-switcher";
+import { ModeToggle } from "~/components/ui/theme-toggle";
+import { Toaster } from "~/components/ui/toaster";
 
 export default function Layout({ children }: PropsWithChildren) {
   return (
-    <div className="container">
-      <div className="mb-5 flex items-center justify-between py-4 border-b dark:border-b-stone-700">
-        <span className="font-bold text-2xl">Dashboard</span>
-        <div className="flex gap-6 items-center">
-          <Link
-            href="/"
-            className="hover:text-rose-400 underline font-semibold"
-          >
-            <Home />
-          </Link>
-          <UserButton afterSignOutUrl="/" />
+    <>
+      <div className="flex h-16 items-center justify-between border-b border-border bg-background px-4">
+        <OrgSwitcher />
+        <MainNav />
+        <div className=" ml-4 flex w-[200px] items-center justify-end space-x-4">
+          {/* <ModeToggle />
+          <UserButton /> */}
         </div>
       </div>
-      {children}
-    </div>
+
+      <main>{children}</main>
+      <Toaster />
+    </>
   );
 }
