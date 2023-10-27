@@ -20,12 +20,20 @@ export default withClerkMiddleware((request: NextRequest) => {
     return NextResponse.next();
   }
 
-  const { userId } = getAuth(request);
+  const auth = getAuth(request);
 
-  if (!userId) {
+  if (!auth.userId) {
     const signInUrl = new URL("/sign-in", request.url);
     signInUrl.searchParams.set("redirect_url", request.url);
     return NextResponse.redirect(signInUrl);
+  }
+
+  if (auth.userId && !auth.orgId) {
+    const orgSelection = new URL(
+      "https://workable-goblin-69.accounts.dev/create-organization",
+      request.url
+    );
+    return NextResponse.redirect(orgSelection);
   }
 
   return NextResponse.next();

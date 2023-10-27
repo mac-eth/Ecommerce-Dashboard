@@ -126,7 +126,7 @@ export default function OrgSwitcher({ className }: OrgSwitcherProps) {
               {organizationList?.map((Org) => (
                 <CommandItem
                   key={Org.organization.name}
-                  value={Org.organization.id}
+                  value={Org.organization.name}
                   onSelect={() => {
                     void setActive({ organization: Org.organization });
                     setSelectedOrgId(Org.organization.id);
